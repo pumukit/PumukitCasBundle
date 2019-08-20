@@ -1,0 +1,29 @@
+{
+    "name": "teltek/pumukit-cas-bundle",
+    "type": "symfony-bundle",
+    "description": "CAS bundle for PuMuKIT",
+    "keywords": [
+        "cas",
+        "symfony",
+        "bundle",
+        "pumukit",
+        "teltek"
+    ],
+    "homepage": "https://github.com/pumukit/PumukitCasBundle",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Teltek Team",
+            "homepage": "http://teltek.es"
+        }
+    ],
+    "require": {
+        "php": ">=7.2",
+        "pumukit/pumukit": ">=3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Pumukit\\CasBundle\\": ""
+        }
+    }
+}
