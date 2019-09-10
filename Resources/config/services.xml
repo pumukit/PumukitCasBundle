@@ -6,8 +6,6 @@
 
     <services>
 
-        <defaults public="true" />
-
         <service id="pumukit.casservice" class="Pumukit\CasBundle\Services\CASService">
             <argument>%pumukit_security.cas_url%</argument>
             <argument>%pumukit_security.cas_port%</argument>
