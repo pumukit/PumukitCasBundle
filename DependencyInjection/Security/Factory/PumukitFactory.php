@@ -7,9 +7,6 @@ use Symfony\Component\DependencyInjection\ChildDefinition;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
-/**
- * Class PumukitFactory.
- */
 class PumukitFactory extends AbstractFactory
 {
     public function __construct()
@@ -17,36 +14,27 @@ class PumukitFactory extends AbstractFactory
         $this->addOption('check_path', '/cas/login');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getPosition()
+    public function getPosition(): string
     {
         return 'pre_auth';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function getKey()
+    public function getKey(): string
     {
         return 'pumukit';
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function isRememberMeAware($config)
+    protected function isRememberMeAware($config): bool
     {
         return false;
     }
 
-    protected function getListenerId()
+    protected function getListenerId(): string
     {
         return 'pumukit.security.authentication.listener';
     }
 
-    protected function createListener($container, $id, $config, $userProvider)
+    protected function createListener($container, $id, $config, $userProvider): string
     {
         $listenerId = parent::createListener($container, $id, $config, $userProvider);
 
@@ -58,7 +46,7 @@ class PumukitFactory extends AbstractFactory
         return $listenerId;
     }
 
-    protected function createAuthProvider(ContainerBuilder $container, $id, $config, $userProviderId)
+    protected function createAuthProvider(ContainerBuilder $container, $id, $config, $userProviderId): string
     {
         $provider = 'pumukit.security.authentication.provider.'.$id;
 
@@ -71,7 +59,7 @@ class PumukitFactory extends AbstractFactory
         return $provider;
     }
 
-    protected function createEntryPoint($container, $id, $config, $defaultEntryPoint)
+    protected function createEntryPoint($container, $id, $config, $defaultEntryPoint): ?string
     {
         $entryPointId = 'security.authentication.form_entry_point.'.$id;
         $container
