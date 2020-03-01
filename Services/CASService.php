@@ -2,9 +2,6 @@
 
 namespace Pumukit\CasBundle\Services;
 
-/**
- * Class CASService.
- */
 class CASService
 {
     private $casUrl;
@@ -15,18 +12,14 @@ class CASService
     private $env;
     private $cacheDir;
 
-    /**
-     * CASService constructor.
-     *
-     * @param string $casUrl
-     * @param string $casPort
-     * @param string $casUri
-     * @param string $casAllowedIpClients
-     * @param string $env
-     * @param null   $cacheDir
-     */
-    public function __construct($casUrl, $casPort, $casUri, $casAllowedIpClients, $env = 'prod', $cacheDir = null)
-    {
+    public function __construct(
+        string $casUrl,
+        string $casPort,
+        string $casUri,
+        string $casAllowedIpClients,
+        string $env = 'prod',
+        $cacheDir = null
+    ) {
         $this->casUrl = $casUrl;
         $this->casPort = $casPort;
         $this->casUri = $casUri;
@@ -35,9 +28,6 @@ class CASService
         $this->cacheDir = $cacheDir;
     }
 
-    /**
-     * @return bool
-     */
     public function isAuthenticated()
     {
         if (!$this->initialize) {
@@ -47,9 +37,6 @@ class CASService
         return \phpCAS::isAuthenticated();
     }
 
-    /**
-     * @return string
-     */
     public function getUser()
     {
         if (!$this->initialize) {
@@ -59,9 +46,6 @@ class CASService
         return \phpCAS::getUser();
     }
 
-    /**
-     * @return array
-     */
     public function getAttributes()
     {
         if (!$this->initialize) {
@@ -71,10 +55,7 @@ class CASService
         return \phpCAS::getAttributes();
     }
 
-    /**
-     * @param string $url
-     */
-    public function setFixedServiceURL($url)
+    public function setFixedServiceURL(string $url): void
     {
         if (!$this->initialize) {
             $this->prepare();
@@ -82,7 +63,7 @@ class CASService
         \phpCAS::setFixedServiceURL($url);
     }
 
-    public function forceAuthentication()
+    public function forceAuthentication(): void
     {
         if (!$this->initialize) {
             $this->prepare();
@@ -90,7 +71,7 @@ class CASService
         \phpCAS::forceAuthentication();
     }
 
-    public function logoutWithRedirectService($url)
+    public function logoutWithRedirectService(string $url): void
     {
         if (!$this->initialize) {
             $this->prepare();
@@ -98,7 +79,7 @@ class CASService
         \phpCAS::logoutWithRedirectService($url);
     }
 
-    public function logout()
+    public function logout(): void
     {
         if (!$this->initialize) {
             $this->prepare();
@@ -106,7 +87,7 @@ class CASService
         \phpCAS::logout();
     }
 
-    private function prepare()
+    private function prepare(): void
     {
         $this->initialize = true;
         \phpCAS::client(CAS_VERSION_2_0, $this->casUrl, $this->casPort, $this->casUri, true);

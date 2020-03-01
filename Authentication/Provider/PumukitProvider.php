@@ -3,7 +3,6 @@
 namespace Pumukit\CasBundle\Authentication\Provider;
 
 use Pumukit\CasBundle\Services\CASUserService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Security\Core\Authentication\Provider\AuthenticationProviderInterface;
 use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -13,40 +12,32 @@ use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-/**
- * Class PumukitProvider.
- */
 class PumukitProvider implements AuthenticationProviderInterface
 {
     private $userProvider;
     private $providerKey;
     private $userChecker;
-    private $container;
     private $createUsers;
     private $CASUserService;
 
-    public function __construct(UserProviderInterface $userProvider, $providerKey, UserCheckerInterface $userChecker, ContainerInterface $container, CASUserService $CASUserService, $createUsers = true)
-    {
+    public function __construct(
+        UserProviderInterface $userProvider,
+        $providerKey,
+        UserCheckerInterface $userChecker,
+        CASUserService $CASUserService,
+        $createUsers = true
+    ) {
         $this->userProvider = $userProvider;
         $this->providerKey = $providerKey;
         $this->userChecker = $userChecker;
-        //NOTE: using container instead of tag service to avoid ServiceCircularReferenceException.
-        $this->container = $container;
         $this->createUsers = $createUsers;
         $this->CASUserService = $CASUserService;
     }
 
-    /**
-     * @param TokenInterface $token
-     *
-     * @throws \Exception
-     *
-     * @return mixed
-     */
     public function authenticate(TokenInterface $token)
     {
         if (!$this->supports($token)) {
-            return false;
+            return $token;
         }
 
         if (!$user = $token->getUser()) {
@@ -83,12 +74,7 @@ class PumukitProvider implements AuthenticationProviderInterface
         return $authenticatedToken;
     }
 
-    /**
-     * @param TokenInterface $token
-     *
-     * @return bool
-     */
-    public function supports(TokenInterface $token)
+    public function supports(TokenInterface $token): bool
     {
         return $token instanceof PreAuthenticatedToken;
     }
