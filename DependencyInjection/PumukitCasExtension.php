@@ -36,6 +36,11 @@ class PumukitCasExtension extends Extension
         $container->setParameter('pumukit_security.cas_group_key', $config['CAS_GROUP_KEY']);
         $container->setParameter('pumukit_security.cas_origin_key', $config['ORIGIN']);
 
+        $container->setParameter('pumukit_saml_security.profile_mapping', $config['profile_mapping']);
+        $container->setParameter('pumukit_security.permission_profiles_attribute', $config['permission_profiles_attribute']);
+        $container->setParameter('pumukit_security.default_permission_profile', $config['default_permission_profile']);
+        $container->setParameter('pumukit_security.force_override_permission_profile', $config['force_override_permission_profile']);
+
         $loader = new Loader\XmlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.xml');
     }

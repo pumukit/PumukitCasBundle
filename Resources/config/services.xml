@@ -47,6 +47,10 @@
             <argument>%pumukit_security.cas_surname_key%</argument>
             <argument>%pumukit_security.cas_group_key%</argument>
             <argument>%pumukit_security.cas_origin_key%</argument>
+            <argument>%pumukit_security.profile_mapping%</argument>
+            <argument>%pumukit_security.permission_profiles_attribute%</argument>
+            <argument>%pumukit_security.default_permission_profile%</argument>
+            <argument>%pumukit_security.force_override_permission_profile%</argument>
         </service>
 
     </services>

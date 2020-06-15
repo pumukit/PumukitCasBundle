@@ -4,6 +4,7 @@ namespace Pumukit\CasBundle\Services;
 
 use Doctrine\ODM\MongoDB\DocumentManager;
 use Pumukit\SchemaBundle\Document\Group;
+use Pumukit\SchemaBundle\Document\PermissionProfile;
 use Pumukit\SchemaBundle\Document\User;
 use Pumukit\SchemaBundle\Services\GroupService;
 use Pumukit\SchemaBundle\Services\PermissionProfileService;
@@ -30,6 +31,10 @@ class CASUserService
     private $casSurnameKey;
     private $casGroupKey;
     private $casOriginKey;
+    private $profileMapping;
+    private $permissionProfilesAttribute;
+    private $defaultPermissionProfile;
+    private $forceOverridePermissionProfile;
 
     /**
      * CASUserService constructor.
@@ -47,8 +52,12 @@ class CASUserService
      * @param string                   $casSurnameKey
      * @param string                   $casGroupKey
      * @param string                   $casOriginKey
+     * @param mixed                    $profileMapping
+     * @param mixed                    $permissionProfilesAttribute
+     * @param mixed                    $defaultPermissionProfile
+     * @param mixed                    $forceOverridePermissionProfile
      */
-    public function __construct(UserService $userService, PersonService $personService, CASService $casService, PermissionProfileService $permissionProfileService, GroupService $groupService, DocumentManager $documentManager, $casIdKey, $casCnKey, $casMailKey, $casGivenNameKey, $casSurnameKey, $casGroupKey, $casOriginKey)
+    public function __construct(UserService $userService, PersonService $personService, CASService $casService, PermissionProfileService $permissionProfileService, GroupService $groupService, DocumentManager $documentManager, $casIdKey, $casCnKey, $casMailKey, $casGivenNameKey, $casSurnameKey, $casGroupKey, $casOriginKey, $profileMapping, $permissionProfilesAttribute, $defaultPermissionProfile, $forceOverridePermissionProfile)
     {
         $this->userService = $userService;
         $this->personService = $personService;
@@ -64,6 +73,11 @@ class CASUserService
         $this->casSurnameKey = $casSurnameKey;
         $this->casGroupKey = $casGroupKey;
         $this->casOriginKey = $casOriginKey;
+
+        $this->profileMapping = $profileMapping;
+        $this->permissionProfilesAttribute = $permissionProfilesAttribute;
+        $this->defaultPermissionProfile = $defaultPermissionProfile;
+        $this->forceOverridePermissionProfile = $forceOverridePermissionProfile;
     }
 
     /**
@@ -124,10 +138,45 @@ class CASUserService
                 $user->setEmail($attributes[$this->casMailKey]);
             }
 
+            $user = $this->checkAndSetPermissionProfile($attributes, $user);
+
             $this->dm->persist($user);
 
             $this->userService->update($user, true, false);
         }
+    }
+
+    protected function checkAndSetPermissionProfile($attributes, User $user): User
+    {
+        if (!$this->forceOverridePermissionProfile) {
+            return $user;
+        }
+
+        if (null === $this->permissionProfilesAttribute) {
+            $defaultProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $this->defaultPermissionProfile]);
+            if ($user->getPermissionProfile()->getId() !== $defaultProfile->getId()) {
+                $user->setPermissionProfile($defaultProfile);
+                $this->userService->update($user, true, false);
+            }
+
+            return $user;
+        }
+
+        if (!array_key_exists($this->permissionProfilesAttribute, $attributes)) {
+            throw new \Exception(__CLASS__.'Profile attribute key not defined');
+        }
+
+        $permissionProfileString = $attributes[$this->permissionProfilesAttribute];
+        $permissionProfileString = $this->profileMapping[$permissionProfileString];
+
+        $permissionProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $permissionProfileString]);
+        if ($user->getPermissionProfile()->getId() !== $permissionProfile->getId()) {
+            $user->setPermissionProfile($permissionProfile);
+        }
+
+        $this->userService->update($user, true, false);
+
+        return $user;
     }
 
     /**
