@@ -18,10 +18,6 @@ class LogoutSuccessHandler implements LogoutSuccessHandlerInterface
 
     /**
      * LogoutSuccessHandler constructor.
-     *
-     * @param array                 $options
-     * @param UrlGeneratorInterface $router
-     * @param CASService            $casService
      */
     public function __construct(array $options, UrlGeneratorInterface $router, CASService $casService)
     {
@@ -31,8 +27,6 @@ class LogoutSuccessHandler implements LogoutSuccessHandlerInterface
     }
 
     /**
-     * @param Request $request
-     *
      * @return \Symfony\Component\HttpFoundation\Response|void
      */
     public function onLogoutSuccess(Request $request)

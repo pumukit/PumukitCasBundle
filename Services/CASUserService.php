@@ -39,23 +39,17 @@ class CASUserService
     /**
      * CASUserService constructor.
      *
-     * @param UserService              $userService
-     * @param PersonService            $personService
-     * @param CASService               $casService
-     * @param PermissionProfileService $permissionProfileService
-     * @param GroupService             $groupService
-     * @param DocumentManager          $documentManager
-     * @param string                   $casIdKey
-     * @param string                   $casCnKey
-     * @param string                   $casMailKey
-     * @param string                   $casGivenNameKey
-     * @param string                   $casSurnameKey
-     * @param string                   $casGroupKey
-     * @param string                   $casOriginKey
-     * @param mixed                    $profileMapping
-     * @param mixed                    $permissionProfilesAttribute
-     * @param mixed                    $defaultPermissionProfile
-     * @param mixed                    $forceOverridePermissionProfile
+     * @param string $casIdKey
+     * @param string $casCnKey
+     * @param string $casMailKey
+     * @param string $casGivenNameKey
+     * @param string $casSurnameKey
+     * @param string $casGroupKey
+     * @param string $casOriginKey
+     * @param mixed  $profileMapping
+     * @param mixed  $permissionProfilesAttribute
+     * @param mixed  $defaultPermissionProfile
+     * @param mixed  $forceOverridePermissionProfile
      */
     public function __construct(UserService $userService, PersonService $personService, CASService $casService, PermissionProfileService $permissionProfileService, GroupService $groupService, DocumentManager $documentManager, $casIdKey, $casCnKey, $casMailKey, $casGivenNameKey, $casSurnameKey, $casGroupKey, $casOriginKey, $profileMapping, $permissionProfilesAttribute, $defaultPermissionProfile, $forceOverridePermissionProfile)
     {
@@ -120,8 +114,6 @@ class CASUserService
     }
 
     /**
-     * @param User $user
-     *
      * @throws \Exception
      */
     public function updateUser(User $user)
@@ -170,7 +162,9 @@ class CASUserService
         $permissionProfileString = $this->profileMapping[$permissionProfileString];
 
         $permissionProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $permissionProfileString]);
-        if ($user->getPermissionProfile()->getId() !== $permissionProfile->getId()) {
+        if (!$permissionProfile instanceof PermissionProfile) {
+            $user->setPermissionProfile($this->getPermissionProfile());
+        } elseif ($user->getPermissionProfile()->getId() !== $permissionProfile->getId()) {
             $user->setPermissionProfile($permissionProfile);
         }
 
@@ -245,7 +239,6 @@ class CASUserService
 
     /**
      * @param array $attributes
-     * @param User  $user
      *
      * @throws \Exception
      */

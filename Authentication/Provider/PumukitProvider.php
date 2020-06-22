@@ -37,8 +37,6 @@ class PumukitProvider implements AuthenticationProviderInterface
     }
 
     /**
-     * @param TokenInterface $token
-     *
      * @throws \Exception
      *
      * @return mixed
@@ -84,8 +82,6 @@ class PumukitProvider implements AuthenticationProviderInterface
     }
 
     /**
-     * @param TokenInterface $token
-     *
      * @return bool
      */
     public function supports(TokenInterface $token)
