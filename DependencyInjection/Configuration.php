@@ -7,7 +7,7 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('pumukit_security');
         $rootNode = $treeBuilder->getRootNode();
@@ -52,6 +52,24 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->scalarNode('CAS_GROUP_KEY')
             ->defaultValue('GROUP')
+            ->end()
+            ->scalarNode('permission_profiles_attribute')
+            ->defaultValue('role')
+            ->info('Default attribute for permission profiles on CAS response')
+            ->end()
+            ->booleanNode('force_override_permission_profile')
+            ->defaultTrue()
+            ->info('If set true, the permission profile returned on CAS will set to user.')
+            ->end()
+            ->scalarNode('default_permission_profile')
+            ->defaultValue('Viewer')
+            ->info('Default Permission Profile name if none is defined through CAS')
+            ->end()
+            ->arrayNode('profile_mapping')
+            ->isRequired()
+            ->requiresAtLeastOneElement()
+            ->useAttributeAsKey('name')
+            ->prototype('scalar')->end()
             ->end()
             ->scalarNode('ORIGIN')
             ->defaultValue('cas')

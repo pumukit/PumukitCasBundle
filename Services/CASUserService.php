@@ -27,6 +27,10 @@ class CASUserService
     private $casSurnameKey;
     private $casGroupKey;
     private $casOriginKey;
+    private $profileMapping;
+    private $permissionProfilesAttribute;
+    private $defaultPermissionProfile;
+    private $forceOverridePermissionProfile;
 
     public function __construct(
         UserService $userService,
@@ -35,12 +39,16 @@ class CASUserService
         PermissionProfileService $permissionProfileService,
         GroupService $groupService,
         DocumentManager $documentManager,
-        string $casIdKey,
-        string $casMailKey,
-        string $casGivenNameKey,
-        string $casSurnameKey,
-        string $casGroupKey,
-        string $casOriginKey
+        $casIdKey,
+        $casMailKey,
+        $casGivenNameKey,
+        $casSurnameKey,
+        $casGroupKey,
+        $casOriginKey,
+        $profileMapping,
+        $permissionProfilesAttribute,
+        $defaultPermissionProfile,
+        $forceOverridePermissionProfile
     ) {
         $this->userService = $userService;
         $this->personService = $personService;
@@ -55,6 +63,11 @@ class CASUserService
         $this->casSurnameKey = $casSurnameKey;
         $this->casGroupKey = $casGroupKey;
         $this->casOriginKey = $casOriginKey;
+
+        $this->profileMapping = $profileMapping;
+        $this->permissionProfilesAttribute = $permissionProfilesAttribute;
+        $this->defaultPermissionProfile = $defaultPermissionProfile;
+        $this->forceOverridePermissionProfile = $forceOverridePermissionProfile;
     }
 
     public function createDefaultUser(string $userName): User
@@ -103,10 +116,47 @@ class CASUserService
                 $user->setEmail($attributes[$this->casMailKey]);
             }
 
+            $user = $this->checkAndSetPermissionProfile($attributes, $user);
+
             $this->dm->persist($user);
 
             $this->userService->update($user, true, false);
         }
+    }
+
+    protected function checkAndSetPermissionProfile($attributes, User $user): User
+    {
+        if (!$this->forceOverridePermissionProfile) {
+            return $user;
+        }
+
+        if (null === $this->permissionProfilesAttribute) {
+            $defaultProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $this->defaultPermissionProfile]);
+            if ($user->getPermissionProfile()->getId() !== $defaultProfile->getId()) {
+                $user->setPermissionProfile($defaultProfile);
+                $this->userService->update($user, true, false);
+            }
+
+            return $user;
+        }
+
+        if (!array_key_exists($this->permissionProfilesAttribute, $attributes)) {
+            throw new \Exception(__CLASS__.'Profile attribute key not defined');
+        }
+
+        $permissionProfileString = $attributes[$this->permissionProfilesAttribute];
+        $permissionProfileString = $this->profileMapping[$permissionProfileString];
+
+        $permissionProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $permissionProfileString]);
+        if (!$permissionProfile instanceof PermissionProfile) {
+            $user->setPermissionProfile($this->getPermissionProfile());
+        } elseif ($user->getPermissionProfile()->getId() !== $permissionProfile->getId()) {
+            $user->setPermissionProfile($permissionProfile);
+        }
+
+        $this->userService->update($user, true, false);
+
+        return $user;
     }
 
     protected function getCASAttributes()

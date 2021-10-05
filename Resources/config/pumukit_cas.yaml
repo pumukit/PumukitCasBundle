@@ -17,6 +17,10 @@ services:
       $casGroupKey: '%pumukit_security.cas_group_key%'
       $casOriginKey: '%pumukit_security.cas_origin_key%'
       $createUsers: '%pumukit_security.create_users%'
+      $profileMapping: '%pumukit_security.profile_mapping%'
+      $permissionProfilesAttribute: '%pumukit_security.permission_profiles_attribute%'
+      $defaultPermissionProfile: '%pumukit_security.default_permission_profile%'
+      $forceOverridePermissionProfile: '%pumukit_security.force_override_permission_profile%'
 
   Pumukit\CasBundle\Services\CASService:
     class: Pumukit\CasBundle\Services\CASService
