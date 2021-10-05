@@ -12,9 +12,6 @@ use Pumukit\SchemaBundle\Services\PersonService;
 use Pumukit\SchemaBundle\Services\UserService;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 
-/**
- * Class CASUserService.
- */
 class CASUserService
 {
     protected $userService;
@@ -25,7 +22,6 @@ class CASUserService
     protected $dm;
 
     private $casIdKey;
-    private $casCnKey;
     private $casMailKey;
     private $casGivenNameKey;
     private $casSurnameKey;
@@ -36,23 +32,24 @@ class CASUserService
     private $defaultPermissionProfile;
     private $forceOverridePermissionProfile;
 
-    /**
-     * CASUserService constructor.
-     *
-     * @param string $casIdKey
-     * @param string $casCnKey
-     * @param string $casMailKey
-     * @param string $casGivenNameKey
-     * @param string $casSurnameKey
-     * @param string $casGroupKey
-     * @param string $casOriginKey
-     * @param mixed  $profileMapping
-     * @param mixed  $permissionProfilesAttribute
-     * @param mixed  $defaultPermissionProfile
-     * @param mixed  $forceOverridePermissionProfile
-     */
-    public function __construct(UserService $userService, PersonService $personService, CASService $casService, PermissionProfileService $permissionProfileService, GroupService $groupService, DocumentManager $documentManager, $casIdKey, $casCnKey, $casMailKey, $casGivenNameKey, $casSurnameKey, $casGroupKey, $casOriginKey, $profileMapping, $permissionProfilesAttribute, $defaultPermissionProfile, $forceOverridePermissionProfile)
-    {
+    public function __construct(
+        UserService $userService,
+        PersonService $personService,
+        CASService $casService,
+        PermissionProfileService $permissionProfileService,
+        GroupService $groupService,
+        DocumentManager $documentManager,
+        $casIdKey,
+        $casMailKey,
+        $casGivenNameKey,
+        $casSurnameKey,
+        $casGroupKey,
+        $casOriginKey,
+        $profileMapping,
+        $permissionProfilesAttribute,
+        $defaultPermissionProfile,
+        $forceOverridePermissionProfile
+    ) {
         $this->userService = $userService;
         $this->personService = $personService;
         $this->casService = $casService;
@@ -61,7 +58,6 @@ class CASUserService
         $this->dm = $documentManager;
 
         $this->casIdKey = $casIdKey;
-        $this->casCnKey = $casCnKey;
         $this->casMailKey = $casMailKey;
         $this->casGivenNameKey = $casGivenNameKey;
         $this->casSurnameKey = $casSurnameKey;
@@ -74,14 +70,7 @@ class CASUserService
         $this->forceOverridePermissionProfile = $forceOverridePermissionProfile;
     }
 
-    /**
-     * @param string $userName
-     *
-     * @throws \Exception
-     *
-     * @return User
-     */
-    public function createDefaultUser($userName)
+    public function createDefaultUser(string $userName): User
     {
         $attributes = $this->getCASAttributes();
 
@@ -113,10 +102,7 @@ class CASUserService
         return $user;
     }
 
-    /**
-     * @throws \Exception
-     */
-    public function updateUser(User $user)
+    public function updateUser(User $user): void
     {
         if ($this->casOriginKey === $user->getOrigin()) {
             $attributes = $this->getCASAttributes();
@@ -173,9 +159,6 @@ class CASUserService
         return $user;
     }
 
-    /**
-     * @return mixed
-     */
     protected function getCASAttributes()
     {
         $this->casService->forceAuthentication();
@@ -183,25 +166,14 @@ class CASUserService
         return $this->casService->getAttributes();
     }
 
-    /**
-     * @param string $userName
-     * @param array  $attributes
-     *
-     * @return string
-     */
-    protected function getCASUsername($userName, $attributes)
+    protected function getCASUsername(string $userName, array $attributes)
     {
-        return (isset($attributes[$this->casIdKey])) ? $attributes[$this->casIdKey] : $userName;
+        return $attributes[$this->casIdKey] ?? $userName;
     }
 
-    /**
-     * @param array $attributes
-     *
-     * @return string
-     */
-    protected function getCASEmail($attributes)
+    protected function getCASEmail(array $attributes)
     {
-        $mail = (isset($attributes[$this->casMailKey])) ? $attributes[$this->casMailKey] : null;
+        $mail = $attributes[$this->casMailKey] ?? null;
         if (!$mail) {
             throw new AuthenticationException("Mail can't be null");
         }
@@ -209,25 +181,15 @@ class CASUserService
         return $mail;
     }
 
-    /**
-     * @param array $attributes
-     *
-     * @return string
-     */
-    protected function getCASFullName($attributes)
+    protected function getCASFullName(array $attributes): string
     {
-        $givenName = (isset($attributes[$this->casGivenNameKey])) ? $attributes[$this->casGivenNameKey] : '';
-        $surName = (isset($attributes[$this->casSurnameKey])) ? $attributes[$this->casSurnameKey] : '';
+        $givenName = $attributes[$this->casGivenNameKey] ?? '';
+        $surName = $attributes[$this->casSurnameKey] ?? '';
 
         return $givenName.' '.$surName;
     }
 
-    /**
-     * @throws \Exception
-     *
-     * @return \Pumukit\SchemaBundle\Document\PermissionProfile
-     */
-    protected function getPermissionProfile()
+    protected function getPermissionProfile(): ?PermissionProfile
     {
         $defaultPermissionProfile = $this->permissionProfileService->getDefault();
         if (null === $defaultPermissionProfile) {
@@ -237,12 +199,7 @@ class CASUserService
         return $defaultPermissionProfile;
     }
 
-    /**
-     * @param array $attributes
-     *
-     * @throws \Exception
-     */
-    protected function setCASGroup($attributes, User $user)
+    protected function setCASGroup(array $attributes, User $user): void
     {
         if (isset($attributes[$this->casGroupKey])) {
             $groupCAS = $this->getGroup($attributes[$this->casGroupKey]);
@@ -255,14 +212,7 @@ class CASUserService
         }
     }
 
-    /**
-     * @param string $key
-     *
-     * @throws \Exception
-     *
-     * @return Group
-     */
-    protected function getGroup($key)
+    protected function getGroup(string $key): Group
     {
         $cleanKey = preg_replace('/\W/', '', $key);
 

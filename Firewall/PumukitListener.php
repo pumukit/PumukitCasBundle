@@ -15,27 +15,40 @@ use Symfony\Component\Security\Http\Firewall\AbstractAuthenticationListener;
 use Symfony\Component\Security\Http\HttpUtils;
 use Symfony\Component\Security\Http\Session\SessionAuthenticationStrategyInterface;
 
-/**
- * Class PumukitListener.
- */
 class PumukitListener extends AbstractAuthenticationListener
 {
     protected $casService;
 
-    /**
-     * {@inheritdoc}
-     */
-    public function __construct(TokenStorageInterface $tokenStorage, AuthenticationManagerInterface $authenticationManager, SessionAuthenticationStrategyInterface $sessionStrategy, HttpUtils $httpUtils, $providerKey, AuthenticationSuccessHandlerInterface $successHandler, AuthenticationFailureHandlerInterface $failureHandler, array $options = [], LoggerInterface $logger = null, EventDispatcherInterface $dispatcher = null, CASService $casService = null)
-    {
-        parent::__construct($tokenStorage, $authenticationManager, $sessionStrategy, $httpUtils, $providerKey, $successHandler, $failureHandler, $options, $logger, $dispatcher);
+    public function __construct(
+        TokenStorageInterface $tokenStorage,
+        AuthenticationManagerInterface $authenticationManager,
+        SessionAuthenticationStrategyInterface $sessionStrategy,
+        HttpUtils $httpUtils,
+        $providerKey,
+        AuthenticationSuccessHandlerInterface $successHandler,
+        AuthenticationFailureHandlerInterface $failureHandler,
+        array $options = [],
+        LoggerInterface $logger = null,
+        EventDispatcherInterface $dispatcher = null,
+        CASService $casService = null
+    ) {
+        parent::__construct(
+            $tokenStorage,
+            $authenticationManager,
+            $sessionStrategy,
+            $httpUtils,
+            $providerKey,
+            $successHandler,
+            $failureHandler,
+            $options,
+            $logger,
+            $dispatcher
+        );
 
         $this->casService = $casService;
         $this->options['require_previous_session'] = false;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     protected function attemptAuthentication(Request $request)
     {
         $this->casService->forceAuthentication();
