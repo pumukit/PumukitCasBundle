@@ -11,7 +11,7 @@ composer require teltek/pumukit-cas-bundle
 if not, add this to config/bundles.php
 
 ```
-Pumukit/CasBundle/PumukitCasBundle::class => ['all' => true]
+Pumukit\CasBundle\PumukitCasBundle::class => ['all' => true]
 ```
 
 Then execute the following commands
