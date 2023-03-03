@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Pumukit\CasBundle;
 
 use Pumukit\CasBundle\DependencyInjection\Security\Factory\PumukitFactory;

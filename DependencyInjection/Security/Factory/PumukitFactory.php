@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Pumukit\CasBundle\DependencyInjection\Security\Factory;
 
 use Symfony\Bundle\SecurityBundle\DependencyInjection\Security\Factory\AbstractFactory;
@@ -54,7 +56,7 @@ class PumukitFactory extends AbstractFactory
             ->setDefinition($provider, new ChildDefinition('pumukit.security.authentication.provider'))
             ->replaceArgument(0, new Reference($userProviderId))
             ->replaceArgument(1, $id)
-            ;
+        ;
 
         return $provider;
     }
@@ -67,7 +69,7 @@ class PumukitFactory extends AbstractFactory
             ->addArgument(new Reference('security.http_utils'))
             ->addArgument($config['check_path'])
             ->addArgument($config['use_forward'])
-            ;
+        ;
 
         return $entryPointId;
     }

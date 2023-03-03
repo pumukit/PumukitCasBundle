@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Pumukit\CasBundle\Authentication\Provider;
 
 use Pumukit\CasBundle\Services\CASUserService;
@@ -8,7 +10,7 @@ use Symfony\Component\Security\Core\Authentication\Token\PreAuthenticatedToken;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationServiceException;
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
-use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
+use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 use Symfony\Component\Security\Core\User\UserCheckerInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
@@ -45,8 +47,8 @@ class PumukitProvider implements AuthenticationProviderInterface
         }
 
         try {
-            $user = $this->userProvider->loadUserByUsername($user);
-        } catch (UsernameNotFoundException $notFound) {
+            $user = $this->userProvider->loadUserByIdentifier($user);
+        } catch (UserNotFoundException $notFound) {
             if ($this->createUsers) {
                 $user = $this->CASUserService->createDefaultUser($user);
             } else {
