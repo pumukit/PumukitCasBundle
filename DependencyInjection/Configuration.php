@@ -11,7 +11,7 @@ class Configuration implements ConfigurationInterface
 {
     public function getConfigTreeBuilder(): TreeBuilder
     {
-        $treeBuilder = new TreeBuilder('pumukit_security');
+        $treeBuilder = new TreeBuilder('pumukit_cas');
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
@@ -68,9 +68,9 @@ class Configuration implements ConfigurationInterface
             ->info('Default Permission Profile name if none is defined through CAS')
             ->end()
             ->arrayNode('profile_mapping')
+            ->useAttributeAsKey('name')
             ->isRequired()
             ->requiresAtLeastOneElement()
-            ->useAttributeAsKey('name')
             ->prototype('scalar')->end()
             ->end()
             ->scalarNode('ORIGIN')

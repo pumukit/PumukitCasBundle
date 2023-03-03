@@ -38,6 +38,6 @@ pumukit_security:
     default_permission_profile: Viewer
     force_override_permission_profile: true
     profile_mapping:
-       - { attendee: my_custom_profile_attendde }
-       - { moderator: my_custom_profile_moderator }
+        attendee: my_custom_profile_attendde
+        moderator: my_custom_profile_moderator
 ```
