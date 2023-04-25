@@ -18,7 +18,7 @@ class CASService
         string $casUrl,
         string $casPort,
         string $casUri,
-        string $casAllowedIpClients,
+        array $casAllowedIpClients,
         string $env = 'prod',
         $cacheDir = null
     ) {

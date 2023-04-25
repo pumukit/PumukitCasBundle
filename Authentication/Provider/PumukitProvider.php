@@ -67,7 +67,6 @@ class PumukitProvider implements AuthenticationProviderInterface
 
         $authenticatedToken = new PreAuthenticatedToken(
             $user,
-            $token->getCredentials(),
             $this->providerKey,
             $user->getRoles()
         );

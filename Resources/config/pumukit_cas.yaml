@@ -21,6 +21,8 @@ services:
       $permissionProfilesAttribute: '%pumukit_security.permission_profiles_attribute%'
       $defaultPermissionProfile: '%pumukit_security.default_permission_profile%'
       $forceOverridePermissionProfile: '%pumukit_security.force_override_permission_profile%'
+      $userProvider: '@security.user.provider.concrete.pumukit'
+      $providerKey: 'pumukit'
 
   Pumukit\CasBundle\Services\CASService:
     class: Pumukit\CasBundle\Services\CASService
@@ -34,3 +36,9 @@ services:
 
   Pumukit\CasBundle\Services\CASUserService:
     class: Pumukit\CasBundle\Services\CASUserService
+
+
+  pumukit.security.authentication.listener: '@Pumukit\CasBundle\Firewall\PumukitListener'
+  pumukit.security.authentication.provider.main: '@Pumukit\CasBundle\Authentication\Provider\PumukitProvider'
+  pumukit.security.handler.logout: '@Pumukit\CasBundle\Handler\LogoutSuccessHandler'
+  pumukit.casservice: '@Pumukit\CasBundle\Services\CASService'

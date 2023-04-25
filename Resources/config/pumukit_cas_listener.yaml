@@ -3,3 +3,4 @@ services:
   Pumukit\CasBundle\Firewall\PumukitListener:
     parent: security.authentication.listener.abstract
     abstract: true
+
