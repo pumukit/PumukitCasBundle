@@ -92,7 +92,7 @@ class CASService
     private function prepare(): void
     {
         $this->initialize = true;
-        \phpCAS::client(CAS_VERSION_3_0, $this->casUrl, $this->casPort, $this->casUri, true);
+        \phpCAS::client(CAS_VERSION_3_0, $this->casUrl, (int) $this->casPort, $this->casUri, true);
         \phpCAS::setNoCasServerValidation();
         if ('dev' == $this->env) {
             \phpCAS::setDebug($this->cacheDir ? ($this->cacheDir.'/cas.log') : '/tmp/cas.log');
