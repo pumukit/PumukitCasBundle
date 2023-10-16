@@ -143,7 +143,7 @@ class CASUserService
         }
 
         if (!array_key_exists($this->permissionProfilesAttribute, $attributes)) {
-            throw new \Exception(__CLASS__.'Profile attribute key not defined');
+            throw new \Exception(self::class.'Profile attribute key not defined');
         }
 
         $permissionProfileString = $attributes[$this->permissionProfilesAttribute];
