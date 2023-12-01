@@ -24,7 +24,7 @@ class CASService
         string $casClientScheme,
         string $casClientHost,
         string $env = 'prod',
-               $cacheDir = null
+        $cacheDir = null
     ) {
         $this->casUrl = $casUrl;
         $this->casPort = $casPort;
@@ -99,7 +99,7 @@ class CASService
     {
         $this->initialize = true;
 
-        $casClientURL = $this->casClientScheme . '://' . $this->casClientHost;
+        $casClientURL = $this->casClientScheme.'://'.$this->casClientHost;
         \phpCAS::client(CAS_VERSION_3_0, $this->casUrl, (int) $this->casPort, 'cas', $casClientURL, true);
 
         \phpCAS::setNoCasServerValidation();
