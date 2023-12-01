@@ -13,14 +13,18 @@ class CASService
     private $initialize = false;
     private $env;
     private $cacheDir;
+    private $casClientScheme;
+    private $casClientHost;
 
     public function __construct(
         string $casUrl,
         string $casPort,
         string $casUri,
         array $casAllowedIpClients,
+        string $casClientScheme,
+        string $casClientHost,
         string $env = 'prod',
-        $cacheDir = null
+               $cacheDir = null
     ) {
         $this->casUrl = $casUrl;
         $this->casPort = $casPort;
@@ -28,6 +32,8 @@ class CASService
         $this->casAllowedIpClients = $casAllowedIpClients;
         $this->env = $env;
         $this->cacheDir = $cacheDir;
+        $this->casClientScheme = $casClientScheme;
+        $this->casClientHost = $casClientHost;
     }
 
     public function isAuthenticated()
@@ -92,10 +98,14 @@ class CASService
     private function prepare(): void
     {
         $this->initialize = true;
-        \phpCAS::client(CAS_VERSION_3_0, $this->casUrl, (int) $this->casPort, $this->casUri, true);
+
+        $casClientURL = $this->casClientScheme . '://' . $this->casClientHost;
+        \phpCAS::client(CAS_VERSION_3_0, $this->casUrl, (int) $this->casPort, 'cas', $casClientURL, true);
+
         \phpCAS::setNoCasServerValidation();
         if ('dev' == $this->env) {
-            \phpCAS::setDebug($this->cacheDir ? ($this->cacheDir.'/cas.log') : '/tmp/cas.log');
+            $file = $this->cacheDir ? ($this->cacheDir.'/cas.log') : '/tmp/cas.log';
+            \phpCAS::setDebug($file);
         }
         if ($this->casAllowedIpClients) {
             \phpCAS::handleLogoutRequests(true, $this->casAllowedIpClients);

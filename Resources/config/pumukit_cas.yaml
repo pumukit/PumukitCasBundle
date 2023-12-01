@@ -7,6 +7,8 @@ services:
       $casUrl: '%pumukit_security.cas_url%'
       $casPort: '%pumukit_security.cas_port%'
       $casUri: '%pumukit_security.cas_uri%'
+      $casClientScheme: '%router.request_context.scheme%'
+      $casClientHost: '%router.request_context.host%'
       $casAllowedIpClients: '%pumukit_security.cas_allowed_ip_clients%'
       $env: '%kernel.environment%'
       $cacheDir: '%kernel.cache_dir%'
