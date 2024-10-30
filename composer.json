@@ -18,8 +18,8 @@
         }
     ],
     "require": {
-        "php": ">=7.2",
-        "pumukit/pumukit": "^4.0",
+        "php": "^8.2",
+        "pumukit/pumukit": "^5.0",
         "apereo/phpcas": "^1.6"
     },
     "autoload": {
