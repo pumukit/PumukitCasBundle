@@ -28,9 +28,9 @@ class PumukitListener extends AbstractAuthenticationListener
         AuthenticationSuccessHandlerInterface $successHandler,
         AuthenticationFailureHandlerInterface $failureHandler,
         array $options = [],
-        LoggerInterface $logger = null,
-        EventDispatcherInterface $dispatcher = null,
-        CASService $casService = null
+        ?LoggerInterface $logger = null,
+        ?EventDispatcherInterface $dispatcher = null,
+        ?CASService $casService = null
     ) {
         parent::__construct(
             $tokenStorage,
