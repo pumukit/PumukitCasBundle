@@ -100,7 +100,7 @@ class CASService
         $this->initialize = true;
 
         $casClientURL = $this->casClientScheme.'://'.$this->casClientHost;
-        \phpCAS::client(CAS_VERSION_3_0, $this->casUrl, (int) $this->casPort, $this->casUri, $casClientURL, true);
+        \phpCAS::client(CAS_VERSION_2_0, $this->casUrl, (int) $this->casPort, $this->casUri, $casClientURL, true);
 
         \phpCAS::setNoCasServerValidation();
         if ('dev' == $this->env) {
