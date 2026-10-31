@@ -31,6 +31,11 @@ class CasAuthenticatorTest extends TestCase
         $this->assertFalse($this->authenticator(enabled: false)->supports($this->request('pumukit_security_cas_login')));
     }
 
+    public function testTheCasLoginIsInteractiveSoTheInteractiveLoginListenersRun(): void
+    {
+        $this->assertTrue($this->authenticator()->isInteractive());
+    }
+
     public function testTheCasPrincipalIsLoadedThroughTheUserService(): void
     {
         $user = new User();
