@@ -4,109 +4,82 @@ declare(strict_types=1);
 
 namespace Pumukit\CasBundle\Services;
 
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
+
+#[WithMonologChannel('cas')]
 class CASService
 {
-    private $casUrl;
-    private $casPort;
-    private $casUri;
-    private $casAllowedIpClients;
-    private $initialize = false;
-    private $env;
-    private $cacheDir;
-    private $casClientScheme;
-    private $casClientHost;
+    private bool $initialize = false;
 
     public function __construct(
-        string $casUrl,
-        string $casPort,
-        string $casUri,
-        array $casAllowedIpClients,
-        string $casClientScheme,
-        string $casClientHost,
-        string $env = 'prod',
-        $cacheDir = null
-    ) {
-        $this->casUrl = $casUrl;
-        $this->casPort = $casPort;
-        $this->casUri = $casUri;
-        $this->casAllowedIpClients = $casAllowedIpClients;
-        $this->env = $env;
-        $this->cacheDir = $cacheDir;
-        $this->casClientScheme = $casClientScheme;
-        $this->casClientHost = $casClientHost;
-    }
+        private readonly string $casUrl,
+        private readonly string $casPort,
+        private readonly string $casUri,
+        private readonly array $casAllowedIpClients,
+        private readonly string $casClientScheme,
+        private readonly string $casClientHost,
+        private readonly LoggerInterface $logger,
+        private readonly string $casVersion = '2.0',
+        private readonly ?string $casServerCaCert = null,
+        private readonly string $env = 'prod',
+    ) {}
 
-    public function isAuthenticated()
+    public function isAuthenticated(): bool
     {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
+        $this->prepare();
 
         return \phpCAS::isAuthenticated();
     }
 
-    public function getUser()
+    public function getUser(): string
     {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
+        $this->prepare();
 
-        return \phpCAS::getUser();
+        return (string) \phpCAS::getUser();
     }
 
-    public function getAttributes()
+    public function getAttributes(): array
     {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
+        $this->prepare();
 
         return \phpCAS::getAttributes();
     }
 
-    public function setFixedServiceURL(string $url): void
+    public function getLoginUrl(): string
     {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
-        \phpCAS::setFixedServiceURL($url);
+        $this->prepare();
+
+        return \phpCAS::getServerLoginURL();
     }
 
-    public function forceAuthentication(): void
+    public function getLogoutUrl(string $service): string
     {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
-        \phpCAS::forceAuthentication();
-    }
+        $this->prepare();
 
-    public function logoutWithRedirectService(string $url): void
-    {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
-        \phpCAS::logoutWithRedirectService($url);
-    }
-
-    public function logout(): void
-    {
-        if (!$this->initialize) {
-            $this->prepare();
-        }
-        \phpCAS::logout();
+        return \phpCAS::getServerLogoutURL().'?'.http_build_query(['service' => $service]);
     }
 
     private function prepare(): void
     {
+        if ($this->initialize) {
+            return;
+        }
         $this->initialize = true;
 
-        $casClientURL = $this->casClientScheme.'://'.$this->casClientHost;
-        \phpCAS::client(CAS_VERSION_2_0, $this->casUrl, (int) $this->casPort, $this->casUri, $casClientURL, true);
-
-        \phpCAS::setNoCasServerValidation();
-        if ('dev' == $this->env) {
-            $file = $this->cacheDir ? ($this->cacheDir.'/cas.log') : '/tmp/cas.log';
-            \phpCAS::setDebug($file);
+        if ('dev' === $this->env) {
+            \phpCAS::setLogger($this->logger);
         }
+
+        \phpCAS::client($this->casVersion, $this->casUrl, (int) $this->casPort, $this->casUri, $this->casClientScheme.'://'.$this->casClientHost, true);
+        \phpCAS::setNoClearTicketsFromUrl();
+
+        if ($this->casServerCaCert) {
+            \phpCAS::setCasServerCACert($this->casServerCaCert);
+        } else {
+            \phpCAS::setNoCasServerValidation();
+        }
+
         if ($this->casAllowedIpClients) {
             \phpCAS::handleLogoutRequests(true, $this->casAllowedIpClients);
         } else {

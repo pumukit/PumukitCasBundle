@@ -6,19 +6,45 @@ namespace Pumukit\CasBundle\DependencyInjection;
 
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Extension\Extension;
+use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader;
-use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 
-class PumukitCasExtension extends Extension
+class PumukitCasExtension extends Extension implements PrependExtensionInterface
 {
+    public const LOG_CHANNEL = 'cas';
+
+    public function prepend(ContainerBuilder $container): void
+    {
+        if ($container->hasExtension('monolog')) {
+            $container->prependExtensionConfig('monolog', [
+                'channels' => [self::LOG_CHANNEL],
+                'handlers' => [
+                    self::LOG_CHANNEL => [
+                        'type' => 'rotating_file',
+                        'path' => '%kernel.logs_dir%/cas.log',
+                        'level' => 'info',
+                        'max_files' => 30,
+                        'channels' => [self::LOG_CHANNEL],
+                        'bubble' => false,
+                        'priority' => 100,
+                    ],
+                ],
+            ]);
+        }
+    }
+
     public function load(array $configs, ContainerBuilder $container): void
     {
         $configuration = new Configuration();
         $config = $this->processConfiguration($configuration, $configs);
 
+        $container->setParameter('pumukit_security.cas_enable', $config['enable']);
         $container->setParameter('pumukit_security.cas_url', $config['cas_url']);
-        $container->setParameter('pumukit_security.cas_port', $config['cas_port']);
+        $container->setParameter('pumukit_security.cas_port', (string) $config['cas_port']);
         $container->setParameter('pumukit_security.cas_uri', $config['cas_uri']);
+        $container->setParameter('pumukit_security.cas_version', $config['cas_version']);
+        $container->setParameter('pumukit_security.cas_server_ca_cert', $config['cas_server_ca_cert']);
         $container->setParameter('pumukit_security.cas_allowed_ip_clients', $config['cas_allowed_ip_clients']);
         $container->setParameter('pumukit_security.create_users', $config['create_users']);
 
@@ -37,6 +63,5 @@ class PumukitCasExtension extends Extension
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('pumukit_cas.yaml');
-        $loader->load('pumukit_cas_listener.yaml');
     }
 }

@@ -1,6 +1,0 @@
-# NOTE: Cannot autowire/autoconfigure services when parent is defined
-services:
-  Pumukit\CasBundle\Firewall\PumukitListener:
-    parent: security.authentication.listener.abstract
-    abstract: true
-

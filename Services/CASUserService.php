@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Pumukit\CasBundle\Services;
 
 use Doctrine\ODM\MongoDB\DocumentManager;
+use Monolog\Attribute\WithMonologChannel;
+use Psr\Log\LoggerInterface;
 use Pumukit\SchemaBundle\Document\Group;
 use Pumukit\SchemaBundle\Document\PermissionProfile;
 use Pumukit\SchemaBundle\Document\User;
@@ -12,205 +14,168 @@ use Pumukit\SchemaBundle\Services\GroupService;
 use Pumukit\SchemaBundle\Services\PermissionProfileService;
 use Pumukit\SchemaBundle\Services\PersonService;
 use Pumukit\SchemaBundle\Services\UserService;
-use Symfony\Component\Security\Core\Exception\AuthenticationException;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
+#[WithMonologChannel('cas')]
 class CASUserService
 {
-    protected $userService;
-    protected $personService;
-    protected $casService;
-    protected $permissionProfileService;
-    protected $groupService;
-    protected $dm;
-
-    private $casIdKey;
-    private $casMailKey;
-    private $casGivenNameKey;
-    private $casSurnameKey;
-    private $casGroupKey;
-    private $casOriginKey;
-    private $profileMapping;
-    private $permissionProfilesAttribute;
-    private $defaultPermissionProfile;
-    private $forceOverridePermissionProfile;
-
     public function __construct(
-        UserService $userService,
-        PersonService $personService,
-        CASService $casService,
-        PermissionProfileService $permissionProfileService,
-        GroupService $groupService,
-        DocumentManager $documentManager,
-        $casIdKey,
-        $casMailKey,
-        $casGivenNameKey,
-        $casSurnameKey,
-        $casGroupKey,
-        $casOriginKey,
-        $profileMapping,
-        $permissionProfilesAttribute,
-        $defaultPermissionProfile,
-        $forceOverridePermissionProfile
-    ) {
-        $this->userService = $userService;
-        $this->personService = $personService;
-        $this->casService = $casService;
-        $this->permissionProfileService = $permissionProfileService;
-        $this->groupService = $groupService;
-        $this->dm = $documentManager;
+        protected UserService $userService,
+        protected PersonService $personService,
+        protected CASService $casService,
+        protected PermissionProfileService $permissionProfileService,
+        protected GroupService $groupService,
+        protected DocumentManager $dm,
+        protected LoggerInterface $logger,
+        private readonly string $casIdKey,
+        private readonly string $casMailKey,
+        private readonly string $casGivenNameKey,
+        private readonly string $casSurnameKey,
+        private readonly string $casGroupKey,
+        private readonly string $casOriginKey,
+        private readonly array $profileMapping,
+        private readonly ?string $permissionProfilesAttribute,
+        private readonly string $defaultPermissionProfile,
+        private readonly bool $forceOverridePermissionProfile,
+        private readonly bool $createUsers = true,
+    ) {}
 
-        $this->casIdKey = $casIdKey;
-        $this->casMailKey = $casMailKey;
-        $this->casGivenNameKey = $casGivenNameKey;
-        $this->casSurnameKey = $casSurnameKey;
-        $this->casGroupKey = $casGroupKey;
-        $this->casOriginKey = $casOriginKey;
-
-        $this->profileMapping = $profileMapping;
-        $this->permissionProfilesAttribute = $permissionProfilesAttribute;
-        $this->defaultPermissionProfile = $defaultPermissionProfile;
-        $this->forceOverridePermissionProfile = $forceOverridePermissionProfile;
-    }
-
-    public function createDefaultUser(string $userName): User
+    public function loadUser(string $principal): User
     {
-        $attributes = $this->getCASAttributes();
+        $attributes = $this->casService->getAttributes();
+        $username = $this->getCASUsername($principal, $attributes);
 
-        $user = new User();
-
-        $casUserName = $this->getCASUsername($userName, $attributes);
-        $user->setUsername($casUserName);
-
-        $casEmail = $this->getCASEmail($attributes);
-        if ($casEmail) {
-            $user->setEmail($casEmail);
+        $repository = $this->dm->getRepository(User::class);
+        $user = $repository->findOneBy(['username' => $username]);
+        if (!$user instanceof User && $username !== $principal) {
+            $user = $repository->findOneBy(['username' => $principal]);
         }
 
-        $casFullName = $this->getCASFullName($attributes);
-        $user->setFullname($casFullName);
+        if (!$user instanceof User) {
+            if (!$this->createUsers) {
+                $this->logger->warning('CAS login refused: the user does not exist and create_users is false', ['user' => $username]);
 
-        $defaultPermissionProfile = $this->getPermissionProfile();
-        $user->setPermissionProfile($defaultPermissionProfile);
+                throw new CustomUserMessageAuthenticationException('Your account does not exist in PuMuKIT.');
+            }
 
+            return $this->createDefaultUser($principal, $attributes);
+        }
+
+        $this->updateUser($user, $attributes);
+
+        return $user;
+    }
+
+    protected function createDefaultUser(string $principal, array $attributes): User
+    {
+        $user = new User();
+        $user->setUsername($this->getCASUsername($principal, $attributes));
+        $user->setEmail($this->getCASEmail($attributes));
+        $user->setFullName($this->getCASFullName($attributes));
+        $user->setPermissionProfile($this->getPermissionProfile($attributes));
         $user->setOrigin($this->casOriginKey);
         $user->setEnabled(true);
 
         $this->userService->create($user);
-
-        $this->setCASGroup($attributes, $user);
-
+        $this->setCASGroups($attributes, $user);
         $this->personService->referencePersonIntoUser($user);
+
+        $this->logger->info('CAS user created', ['user' => $user->getUsername(), 'permission_profile' => $user->getPermissionProfile()?->getName()]);
 
         return $user;
     }
 
-    public function updateUser(User $user): void
+    protected function updateUser(User $user, array $attributes): void
     {
-        if ($this->casOriginKey === $user->getOrigin()) {
-            $attributes = $this->getCASAttributes();
+        if ($this->casOriginKey !== $user->getOrigin()) {
+            return;
+        }
 
-            $casFullName = $this->getCASFullName($attributes);
-            $user->setFullname($casFullName);
+        $user->setFullName($this->getCASFullName($attributes));
+        $email = $this->attribute($attributes, $this->casMailKey);
+        if ($email && $email !== $user->getEmail()) {
+            $user->setEmail($email);
+        }
+        $this->setCASGroups($attributes, $user);
 
-            $this->setCASGroup($attributes, $user);
-
-            if ((isset($attributes[$this->casMailKey])) && ($attributes[$this->casMailKey] !== $user->getEmail())) {
-                $user->setEmail($attributes[$this->casMailKey]);
+        if ($this->forceOverridePermissionProfile) {
+            $permissionProfile = $this->getPermissionProfile($attributes);
+            if ($user->getPermissionProfile()?->getId() !== $permissionProfile->getId()) {
+                $this->logger->info('CAS user permission profile changed', ['user' => $user->getUsername(), 'from' => $user->getPermissionProfile()?->getName(), 'to' => $permissionProfile->getName()]);
+                $user->setPermissionProfile($permissionProfile);
             }
-
-            $user = $this->checkAndSetPermissionProfile($attributes, $user);
-
-            $this->dm->persist($user);
-
-            $this->userService->update($user, true, false);
-        }
-    }
-
-    protected function checkAndSetPermissionProfile($attributes, User $user): User
-    {
-        if (!$this->forceOverridePermissionProfile) {
-            return $user;
-        }
-
-        if (null === $this->permissionProfilesAttribute) {
-            $defaultProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $this->defaultPermissionProfile]);
-            if ($user->getPermissionProfile()->getId() !== $defaultProfile->getId()) {
-                $user->setPermissionProfile($defaultProfile);
-                $this->userService->update($user, true, false);
-            }
-
-            return $user;
-        }
-
-        if (!array_key_exists($this->permissionProfilesAttribute, $attributes)) {
-            throw new \Exception(self::class.'Profile attribute key not defined');
-        }
-
-        $permissionProfileString = $attributes[$this->permissionProfilesAttribute];
-        $permissionProfileString = $this->profileMapping[$permissionProfileString];
-
-        $permissionProfile = $this->dm->getRepository(PermissionProfile::class)->findOneBy(['name' => $permissionProfileString]);
-        if (!$permissionProfile instanceof PermissionProfile) {
-            $user->setPermissionProfile($this->getPermissionProfile());
-        } elseif ($user->getPermissionProfile()->getId() !== $permissionProfile->getId()) {
-            $user->setPermissionProfile($permissionProfile);
         }
 
         $this->userService->update($user, true, false);
-
-        return $user;
     }
 
-    protected function getCASAttributes()
+    protected function getPermissionProfile(array $attributes): PermissionProfile
     {
-        $this->casService->forceAuthentication();
+        $repository = $this->dm->getRepository(PermissionProfile::class);
 
-        return $this->casService->getAttributes();
-    }
-
-    protected function getCASUsername(string $userName, array $attributes)
-    {
-        return $attributes[$this->casIdKey] ?? $userName;
-    }
-
-    protected function getCASEmail(array $attributes)
-    {
-        $mail = $attributes[$this->casMailKey] ?? null;
-        if (!$mail) {
-            throw new AuthenticationException("Mail can't be null");
+        if (null !== $this->permissionProfilesAttribute) {
+            $values = $this->values($attributes, $this->permissionProfilesAttribute);
+            if (!$values) {
+                $this->logger->warning('CAS attribute of the permission profile not found, using the default one', ['attribute' => $this->permissionProfilesAttribute]);
+            }
+            foreach ($values as $value) {
+                $name = $this->profileMapping[$value] ?? null;
+                $permissionProfile = $name ? $repository->findOneBy(['name' => $name]) : null;
+                if ($permissionProfile instanceof PermissionProfile) {
+                    return $permissionProfile;
+                }
+            }
+            if ($values) {
+                $this->logger->warning('CAS permission profile not mapped or not found, using the default one', ['values' => $values]);
+            }
         }
 
-        return $mail;
+        $permissionProfile = $repository->findOneBy(['name' => $this->defaultPermissionProfile]) ?? $this->permissionProfileService->getDefault();
+        if (!$permissionProfile instanceof PermissionProfile) {
+            throw new \RuntimeException('Unable to assign a Permission Profile to the CAS user: there is no default Permission Profile');
+        }
+
+        return $permissionProfile;
+    }
+
+    protected function getCASUsername(string $principal, array $attributes): string
+    {
+        return $this->attribute($attributes, $this->casIdKey) ?? $principal;
+    }
+
+    protected function getCASEmail(array $attributes): string
+    {
+        $email = $this->attribute($attributes, $this->casMailKey);
+        if (!$email) {
+            throw new CustomUserMessageAuthenticationException('Your CAS account has no email.');
+        }
+
+        return $email;
     }
 
     protected function getCASFullName(array $attributes): string
     {
-        $givenName = $attributes[$this->casGivenNameKey] ?? '';
-        $surName = $attributes[$this->casSurnameKey] ?? '';
-
-        return $givenName.' '.$surName;
+        return trim(($this->attribute($attributes, $this->casGivenNameKey) ?? '').' '.($this->attribute($attributes, $this->casSurnameKey) ?? ''));
     }
 
-    protected function getPermissionProfile(): ?PermissionProfile
+    protected function setCASGroups(array $attributes, User $user): void
     {
-        $defaultPermissionProfile = $this->permissionProfileService->getDefault();
-        if (null === $defaultPermissionProfile) {
-            throw new \Exception('Unable to assign a Permission Profile to the new User. There is no default Permission Profile');
+        if (!array_key_exists($this->casGroupKey, $attributes)) {
+            return;
         }
 
-        return $defaultPermissionProfile;
-    }
+        $groups = array_map(fn (string $key) => $this->getGroup($key), $this->values($attributes, $this->casGroupKey));
+        $keys = array_map(static fn (Group $group) => $group->getKey(), $groups);
 
-    protected function setCASGroup(array $attributes, User $user): void
-    {
-        if (isset($attributes[$this->casGroupKey])) {
-            $groupCAS = $this->getGroup($attributes[$this->casGroupKey]);
-            foreach ($user->getGroups() as $group) {
-                if ($this->casOriginKey === $group->getOrigin()) {
-                    $this->userService->deleteGroup($group, $user, true, false);
-                }
+        foreach ($user->getGroups() as $group) {
+            if ($this->casOriginKey === $group->getOrigin() && !in_array($group->getKey(), $keys, true)) {
+                $this->userService->deleteGroup($group, $user, true, false);
             }
-            $this->userService->addGroup($groupCAS, $user, true, false);
+        }
+        foreach ($groups as $group) {
+            if (!$user->containsGroup($group)) {
+                $this->userService->addGroup($group, $user, true, false);
+            }
         }
     }
 
@@ -218,11 +183,8 @@ class CASUserService
     {
         $cleanKey = preg_replace('/\W/', '', $key);
 
-        $group = $this->dm->getRepository(Group::class)->findOneBy(
-            ['key' => $cleanKey]
-        );
-
-        if ($group) {
+        $group = $this->dm->getRepository(Group::class)->findOneBy(['key' => $cleanKey]);
+        if ($group instanceof Group) {
             return $group;
         }
 
@@ -233,5 +195,17 @@ class CASUserService
         $this->groupService->create($group);
 
         return $group;
+    }
+
+    private function attribute(array $attributes, string $key): ?string
+    {
+        return $this->values($attributes, $key)[0] ?? null;
+    }
+
+    private function values(array $attributes, string $key): array
+    {
+        $values = $attributes[$key] ?? [];
+
+        return array_values(array_filter(array_map('strval', is_array($values) ? $values : [$values]), static fn (string $value) => '' !== $value));
     }
 }

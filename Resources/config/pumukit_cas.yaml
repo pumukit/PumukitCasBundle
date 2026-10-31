@@ -7,11 +7,12 @@ services:
       $casUrl: '%pumukit_security.cas_url%'
       $casPort: '%pumukit_security.cas_port%'
       $casUri: '%pumukit_security.cas_uri%'
+      $casVersion: '%pumukit_security.cas_version%'
+      $casServerCaCert: '%pumukit_security.cas_server_ca_cert%'
       $casClientScheme: '%router.request_context.scheme%'
       $casClientHost: '%router.request_context.host%'
       $casAllowedIpClients: '%pumukit_security.cas_allowed_ip_clients%'
       $env: '%kernel.environment%'
-      $cacheDir: '%kernel.cache_dir%'
       $casIdKey: '%pumukit_security.cas_id_key%'
       $casMailKey: '%pumukit_security.cas_mail_key%'
       $casGivenNameKey: '%pumukit_security.cas_givenname_key%'
@@ -23,24 +24,20 @@ services:
       $permissionProfilesAttribute: '%pumukit_security.permission_profiles_attribute%'
       $defaultPermissionProfile: '%pumukit_security.default_permission_profile%'
       $forceOverridePermissionProfile: '%pumukit_security.force_override_permission_profile%'
-      $userProvider: '@security.user.provider.concrete.pumukit'
-      $providerKey: 'pumukit'
+      $enabled: '%pumukit_security.cas_enable%'
 
   Pumukit\CasBundle\Services\CASService:
     class: Pumukit\CasBundle\Services\CASService
 
-  Pumukit\CasBundle\Authentication\Provider\PumukitProvider:
-    class: Pumukit\CasBundle\Authentication\Provider\PumukitProvider
-    public: false
-
-  Pumukit\CasBundle\Handler\LogoutSuccessHandler:
-    class: Pumukit\CasBundle\Handler\LogoutSuccessHandler
-
   Pumukit\CasBundle\Services\CASUserService:
     class: Pumukit\CasBundle\Services\CASUserService
 
+  Pumukit\CasBundle\Security\CasAuthenticator:
+    class: Pumukit\CasBundle\Security\CasAuthenticator
 
-  pumukit.security.authentication.listener: '@Pumukit\CasBundle\Firewall\PumukitListener'
-  pumukit.security.authentication.provider.main: '@Pumukit\CasBundle\Authentication\Provider\PumukitProvider'
-  pumukit.security.handler.logout: '@Pumukit\CasBundle\Handler\LogoutSuccessHandler'
+  Pumukit\CasBundle\EventListener\CasLogoutListener:
+    class: Pumukit\CasBundle\EventListener\CasLogoutListener
+    tags:
+      - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LogoutEvent, method: onLogout, dispatcher: security.event_dispatcher.main, priority: 128 }
+
   pumukit.casservice: '@Pumukit\CasBundle\Services\CASService'
