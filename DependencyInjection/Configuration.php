@@ -9,27 +9,35 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class Configuration implements ConfigurationInterface
 {
+    public const REQUIRED = ['cas_url', 'cas_port', 'cas_uri', 'profile_mapping'];
+
     public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('pumukit_cas');
         $rootNode = $treeBuilder->getRootNode();
 
         $rootNode
+            ->validate()
+            ->ifTrue(static fn (array $config): bool => $config['enable'] && [] !== self::missing($config))
+            ->then(static function (array $config): never {
+                throw new \InvalidArgumentException('pumukit_cas needs '.implode(', ', self::missing($config)).' when it is enabled');
+            })
+            ->end()
             ->children()
             ->booleanNode('enable')
             ->defaultTrue()
-            ->info('If false, the CAS login is switched off while the bundle stays registered: /cas/login and the entry point fall back to the PuMuKIT login form')
+            ->info('If false, the CAS login is switched off while the bundle stays registered: /cas/login and the entry point fall back to the PuMuKIT login form, and the CAS server options are not required')
             ->end()
             ->scalarNode('cas_url')
-            ->isRequired()
+            ->defaultNull()
             ->info('The hostname of the CAS server')
             ->end()
             ->scalarNode('cas_port')
-            ->isRequired()
+            ->defaultNull()
             ->info('The port the CAS server is running on')
             ->end()
             ->scalarNode('cas_uri')
-            ->isRequired()
+            ->defaultNull()
             ->info('The URI the CAS server is responding on')
             ->end()
             ->enumNode('cas_version')
@@ -82,8 +90,6 @@ class Configuration implements ConfigurationInterface
             ->end()
             ->arrayNode('profile_mapping')
             ->useAttributeAsKey('name')
-            ->isRequired()
-            ->requiresAtLeastOneElement()
             ->prototype('scalar')->end()
             ->end()
             ->scalarNode('ORIGIN')
@@ -93,5 +99,10 @@ class Configuration implements ConfigurationInterface
         ;
 
         return $treeBuilder;
+    }
+
+    private static function missing(array $config): array
+    {
+        return array_values(array_filter(self::REQUIRED, static fn (string $key): bool => is_array($config[$key]) ? [] === $config[$key] : '' === trim((string) $config[$key])));
     }
 }

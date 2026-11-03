@@ -40,9 +40,9 @@ class PumukitCasExtension extends Extension implements PrependExtensionInterface
         $config = $this->processConfiguration($configuration, $configs);
 
         $container->setParameter('pumukit_security.cas_enable', $config['enable']);
-        $container->setParameter('pumukit_security.cas_url', $config['cas_url']);
+        $container->setParameter('pumukit_security.cas_url', (string) $config['cas_url']);
         $container->setParameter('pumukit_security.cas_port', (string) $config['cas_port']);
-        $container->setParameter('pumukit_security.cas_uri', $config['cas_uri']);
+        $container->setParameter('pumukit_security.cas_uri', (string) $config['cas_uri']);
         $container->setParameter('pumukit_security.cas_version', $config['cas_version']);
         $container->setParameter('pumukit_security.cas_server_ca_cert', $config['cas_server_ca_cert']);
         $container->setParameter('pumukit_security.cas_allowed_ip_clients', $config['cas_allowed_ip_clients']);

@@ -52,8 +52,8 @@ pumukit_cas:
 
 | Option                              | Default     | Description                                                                                       |
 |-------------------------------------|-------------|---------------------------------------------------------------------------------------------------|
-| `enable`                            | `true`      | If false, `/cas/login` and the entry point fall back to the PuMuKIT login form, without changing the firewall |
-| `cas_url`, `cas_port`, `cas_uri`    | (required)  | Host, port and path of the CAS server                                                              |
+| `enable`                            | `true`      | If false, `/cas/login` and the entry point fall back to the PuMuKIT login form, without changing the firewall, and the CAS server options are not required |
+| `cas_url`, `cas_port`, `cas_uri`    | (required if enabled) | Host, port and path of the CAS server                                                              |
 | `cas_version`                       | `2.0`       | CAS protocol version: `1.0`, `2.0` or `3.0` (`/p3/serviceValidate`)                                |
 | `cas_server_ca_cert`                | `null`      | CA certificate that signs the CAS server certificate. If null, the certificate is not validated: set it in production |
 | `cas_allowed_ip_clients`            | `[]`        | IPs allowed to send single logout requests; if empty, single logout is accepted from any client  |
@@ -63,7 +63,7 @@ pumukit_cas:
 | `CAS_GIVENNAME_KEY`, `CAS_SURNAME_KEY` | `GIVENNAME`, `SURNAME` | Attributes with the full name                                                  |
 | `CAS_GROUP_KEY`                     | `GROUP`     | Attribute with the groups; they are created with the `ORIGIN` origin and kept in sync on every login |
 | `permission_profiles_attribute`     | `role`      | Attribute with the role mapped through `profile_mapping` (`null` to always use the default profile) |
-| `profile_mapping`                   | (required)  | CAS role → name of the PuMuKIT permission profile                                                  |
+| `profile_mapping`                   | (required if enabled) | CAS role → name of the PuMuKIT permission profile                                                  |
 | `default_permission_profile`        | `Viewer`    | Profile for a missing or unmapped role; the default profile of PuMuKIT is used if it does not exist |
 | `force_override_permission_profile` | `true`      | Update the permission profile on every login                                                       |
 | `ORIGIN`                            | `cas`       | Origin of the users and groups created by the bundle; only these users are updated from CAS      |
