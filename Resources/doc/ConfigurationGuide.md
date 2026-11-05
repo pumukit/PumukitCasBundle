@@ -77,5 +77,5 @@ handler (the default one of PuMuKIT, `framework.session.handler_id: ~`).
 Logs
 ----
 
-The bundle logs to its own `cas` channel, in `%kernel.logs_dir%/cas-YYYY-MM-DD.log` (30 files kept): logins, created
+The bundle logs to its own `cas` channel, in `%kernel.logs_dir%/cas-YYYY-MM-DD.log` (`PUMUKIT_LOG_MAX_FILES` files kept, 15 by default): logins, created
 users, permission profile changes and failed logins. In the `dev` environment the phpCAS traces are added.

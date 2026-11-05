@@ -24,7 +24,7 @@ class PumukitCasExtension extends Extension implements PrependExtensionInterface
                         'type' => 'rotating_file',
                         'path' => '%kernel.logs_dir%/cas.log',
                         'level' => 'info',
-                        'max_files' => 30,
+                        'max_files' => '%env(int:PUMUKIT_LOG_MAX_FILES)%',
                         'channels' => [self::LOG_CHANNEL],
                         'bubble' => false,
                         'priority' => 100,
