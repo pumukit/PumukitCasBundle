@@ -52,7 +52,7 @@ pumukit_cas:
 
 | Option                              | Default     | Description                                                                                       |
 |-------------------------------------|-------------|---------------------------------------------------------------------------------------------------|
-| `enable`                            | `true`      | If false, `/cas/login` and the entry point fall back to the PuMuKIT login form, without changing the firewall, and the CAS server options are not required |
+| `enable`                            | `true`      | If false, the CAS routes are not loaded, the authenticator only sends to the PuMuKIT login form as entry point, without changing the firewall, nothing else of the bundle is loaded (CAS services, logout listener, `cas` log channel) and the CAS server options are not required |
 | `cas_url`, `cas_port`, `cas_uri`    | (required if enabled) | Host, port and path of the CAS server                                                              |
 | `cas_version`                       | `2.0`       | CAS protocol version: `1.0`, `2.0` or `3.0` (`/p3/serviceValidate`)                                |
 | `cas_server_ca_cert`                | `null`      | CA certificate that signs the CAS server certificate. If null, the certificate is not validated: set it in production |

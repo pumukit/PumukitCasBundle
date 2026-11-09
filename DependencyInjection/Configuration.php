@@ -26,7 +26,7 @@ class Configuration implements ConfigurationInterface
             ->children()
             ->booleanNode('enable')
             ->defaultTrue()
-            ->info('If false, the CAS login is switched off while the bundle stays registered: /cas/login and the entry point fall back to the PuMuKIT login form, and the CAS server options are not required')
+            ->info('If false, the CAS routes are not loaded, the authenticator only sends to the PuMuKIT login form as entry point, nothing else of the bundle is loaded and the CAS server options are not required')
             ->end()
             ->scalarNode('cas_url')
             ->defaultNull()

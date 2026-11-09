@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Pumukit\CasBundle\DependencyInjection;
 
+use Pumukit\CasBundle\Routing\RouteLoader;
+use Pumukit\CasBundle\Security\CasAuthenticator;
+use Pumukit\CasBundle\Security\DisabledAuthenticator;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -16,6 +19,10 @@ class PumukitCasExtension extends Extension implements PrependExtensionInterface
 
     public function prepend(ContainerBuilder $container): void
     {
+        if (!$this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()))['enable']) {
+            return;
+        }
+
         if ($container->hasExtension('monolog')) {
             $container->prependExtensionConfig('monolog', [
                 'channels' => [self::LOG_CHANNEL],
@@ -60,6 +67,17 @@ class PumukitCasExtension extends Extension implements PrependExtensionInterface
         $container->setParameter('pumukit_security.permission_profiles_attribute', $config['permission_profiles_attribute']);
         $container->setParameter('pumukit_security.default_permission_profile', $config['default_permission_profile']);
         $container->setParameter('pumukit_security.force_override_permission_profile', $config['force_override_permission_profile']);
+
+        $container->register(RouteLoader::class)
+            ->setArguments(['%pumukit_security.cas_enable%', '%kernel.environment%'])
+            ->addTag('routing.loader')
+        ;
+
+        if (!$config['enable']) {
+            $container->register(CasAuthenticator::class, DisabledAuthenticator::class)->setAutowired(true);
+
+            return;
+        }
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('pumukit_cas.yaml');

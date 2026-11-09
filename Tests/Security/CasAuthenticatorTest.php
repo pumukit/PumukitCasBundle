@@ -24,11 +24,10 @@ use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationExc
  */
 class CasAuthenticatorTest extends TestCase
 {
-    public function testItOnlyHandlesTheCasLoginRouteWhenEnabled(): void
+    public function testItOnlyHandlesTheCasLoginRoute(): void
     {
         $this->assertTrue($this->authenticator()->supports($this->request('pumukit_security_cas_login')));
         $this->assertFalse($this->authenticator()->supports($this->request('pumukit_login')));
-        $this->assertFalse($this->authenticator(enabled: false)->supports($this->request('pumukit_security_cas_login')));
     }
 
     public function testTheCasLoginIsInteractiveSoTheInteractiveLoginListenersRun(): void
@@ -99,13 +98,12 @@ class CasAuthenticatorTest extends TestCase
         $this->assertSame(['Your CAS account has no email.'], $request->getSession()->getFlashBag()->get('error'));
     }
 
-    public function testTheEntryPointSendsToCasOrToTheFormWhenDisabled(): void
+    public function testTheEntryPointSendsToCas(): void
     {
         $this->assertSame('/pumukit_security_cas_login', $this->authenticator()->start(new Request())->getTargetUrl());
-        $this->assertSame('/pumukit_login', $this->authenticator(enabled: false)->start(new Request())->getTargetUrl());
     }
 
-    private function authenticator(?CASService $casService = null, ?CASUserService $casUserService = null, bool $enabled = true): CasAuthenticator
+    private function authenticator(?CASService $casService = null, ?CASUserService $casUserService = null): CasAuthenticator
     {
         if (!$casService) {
             $casService = $this->createStub(CASService::class);
@@ -121,7 +119,7 @@ class CasAuthenticatorTest extends TestCase
         $urlGenerator = $this->createStub(UrlGeneratorInterface::class);
         $urlGenerator->method('generate')->willReturnCallback(static fn (string $route) => '/'.$route);
 
-        return new CasAuthenticator($casService, $casUserService, $urlGenerator, new NullLogger(), $enabled);
+        return new CasAuthenticator($casService, $casUserService, $urlGenerator, new NullLogger());
     }
 
     private function request(string $route): Request

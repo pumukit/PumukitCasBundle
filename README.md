@@ -42,7 +42,8 @@ The authentication was rewritten for the authenticator system of Symfony 7: the 
 `pumukit.security.handler.logout` success handler and `anonymous: true` do not exist anymore. Update
 `config/packages/security.yaml` as shown in the configuration guide. The `pumukit_cas` options are the same; there
 are three new optional ones (`enable`, `cas_version` and `cas_server_ca_cert`). With `enable: false`, the bundle can
-stay installed without the CAS server options.
+stay installed without the CAS server options: the CAS routes are not loaded, the authenticator of the firewall only
+sends to the PuMuKIT login form and nothing else of the bundle is loaded.
 
 Behaviour changes:
 

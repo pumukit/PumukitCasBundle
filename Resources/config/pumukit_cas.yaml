@@ -24,7 +24,6 @@ services:
       $permissionProfilesAttribute: '%pumukit_security.permission_profiles_attribute%'
       $defaultPermissionProfile: '%pumukit_security.default_permission_profile%'
       $forceOverridePermissionProfile: '%pumukit_security.force_override_permission_profile%'
-      $enabled: '%pumukit_security.cas_enable%'
 
   Pumukit\CasBundle\Services\CASService:
     class: Pumukit\CasBundle\Services\CASService

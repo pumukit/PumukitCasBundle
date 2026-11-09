@@ -1,5 +1,3 @@
-pumukit_security_cas_login:
-    path: /cas/login
-
-pumukit_security_cas_logout:
-    path: /cas/logout
+pumukit_cas:
+    resource: "@PumukitCasBundle/Resources/config/routes/cas.yml"
+    type:     pumukit_cas

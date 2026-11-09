@@ -36,12 +36,11 @@ class CasAuthenticator extends AbstractAuthenticator implements AuthenticationEn
         private readonly CASUserService $casUserService,
         private readonly UrlGeneratorInterface $urlGenerator,
         private readonly LoggerInterface $logger,
-        private readonly bool $enabled = true,
     ) {}
 
     public function supports(Request $request): ?bool
     {
-        return $this->enabled && self::LOGIN_ROUTE === $request->attributes->get('_route');
+        return self::LOGIN_ROUTE === $request->attributes->get('_route');
     }
 
     public function authenticate(Request $request): Passport
@@ -97,6 +96,6 @@ class CasAuthenticator extends AbstractAuthenticator implements AuthenticationEn
 
     public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
-        return new RedirectResponse($this->urlGenerator->generate($this->enabled ? self::LOGIN_ROUTE : self::FORM_LOGIN_ROUTE));
+        return new RedirectResponse($this->urlGenerator->generate(self::LOGIN_ROUTE));
     }
 }
