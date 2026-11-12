@@ -61,6 +61,7 @@ pumukit_cas:
 | `CAS_ID_KEY`                        | `UID`       | Attribute with the username (the CAS principal is used if it is missing)                          |
 | `CAS_MAIL_KEY`                      | `MAIL`      | Attribute with the email (required to create a user)                                              |
 | `CAS_GIVENNAME_KEY`, `CAS_SURNAME_KEY` | `GIVENNAME`, `SURNAME` | Attributes with the full name                                                  |
+| `CAS_CN_KEY`                        | `CN`        | Accepted for compatibility but not used: the full name is built from `CAS_GIVENNAME_KEY` and `CAS_SURNAME_KEY` |
 | `CAS_GROUP_KEY`                     | `GROUP`     | Attribute with the groups; they are created with the `ORIGIN` origin and kept in sync on every login |
 | `permission_profiles_attribute`     | `role`      | Attribute with the role mapped through `profile_mapping` (`null` to always use the default profile) |
 | `profile_mapping`                   | (required if enabled) | CAS role → name of the PuMuKIT permission profile                                                  |
